@@ -1,0 +1,102 @@
+---
+title: "Prediction Assignment Writeup"
+author: "Aramis Rojas"
+date: "1/2/2021"
+output: html_document
+---
+#RANDOM FOREST ALGORITHM WITH WEARABLES DATA
+
+The idea is to perform a fitted model on the training data suggested to use, so it can predict the classes on the testing data given.
+
+Some cleaning data duties had to be done previous to its usage, so this can be understood by the fitting functions relative to the algorithm (these only understand numerical or factor data). The tasks were related with columns with empty spaces or NA data, or even rows with values when the rest of these didn't had any. 
+
+Some professional packages were tried but finally an easier solution was performed, so all the columns unusable were simply removed.
+
+```{r}
+pml_training<-read.csv("C:/Users/U6049382/OneDrive/Coursera/8. Practical Machine Learning/pml-training.csv")
+pml_testing<-read.csv("C:/Users/U6049382/OneDrive/Coursera/8. Practical Machine Learning/pml-testing.csv")
+pml_training<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-training.csv")
+pml_testing<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-testing.csv")
+
+pml_training<-pml_training[,-c(12:36)]
+pml_training<-pml_training[,-c(25:34)]
+pml_training<-pml_training[,-c(34:48)]
+pml_training<-pml_training[,-c(37:51)]
+pml_training<-pml_training[,-c(60:74)]
+pml_training<-pml_training[,-c(61:70)]
+pml_training<-pml_training[,-c(38:47)]
+
+pml_train_models<-pml_training[,-c(1:7)]
+
+pml_testing<-pml_testing[,-c(12:36)]
+pml_testing<-pml_testing[,-c(25:34)]
+pml_testing<-pml_testing[,-c(34:48)]
+pml_testing<-pml_testing[,-c(37:51)]
+pml_testing<-pml_testing[,-c(60:74)]
+pml_testing<-pml_testing[,-c(61:70)]
+pml_testing<-pml_testing[,-c(38:47)]
+
+pml_test_models<-pml_testing[,-c(1:7)]
+```
+
+These are the libraries used along the code. They are have been run under version 4.0.3 of R software.
+
+```{r}
+library(caret)
+library(AppliedPredictiveModeling)
+library(randomForest)
+library(ggplot2)
+library(ElemStatLearn)
+library(tidyverse)
+```
+
+Now this is the code used to fit a model. The algorith used has been Random Forest, due to the unclear structure of the data, and because these kind of models are suggested for its usage with human data modelling, due to its complexity.
+
+A shorter and random resample has been taken from the traning set, so faster calculations can be done. With the number of observations, the random forest function was taking a lot of time even without any kind of cross-validation method, so it made it almost impossible to execute.
+
+It's important to set a seed before executing the resample, as well as before the algorithm, to make sure the code is reproducible with the same rows selected, and thus, the same results are obtained.
+
+The cross-validation performed within the "train" function is the 10-fold-cross-validation, which we can include inside. It's a method which will make 10 different folds of the training data, always leaving 1 of them out, and then fitting the desired model with the others. Then, the function itself is ready to calculate the average prediction error rate.
+
+```{r}
+#Creating a shorter resample from the entire observations
+
+set.seed(345)
+resamples<-sample(1:nrow(pml_train_models), 2000)
+pml_train_sample<-pml_train_models[resamples,]
+
+#Fitting the model with the resample
+set.seed(345)
+train.control<-trainControl(method = "cv", number = 10)
+RF_caret<-train(classe~.,data=pml_train_sample, method="rf", prox=TRUE, trControl = train.control)
+RF_caret
+
+```
+
+To make it much more clearer, some graphical representations have been done. Also, the central points from the observations have been calculated and painted, to make a better graphical representation.
+
+```{r}
+#Plotting with class centers
+pml_centers<-classCenter(pml_train_sample[,c(4,17)], pml_train_sample$classe, RF_caret$finalModel$proximity)
+pml_centers<-as.data.frame(pml_centers)
+pml_centers$classe <- rownames(pml_centers)
+plotrf<-qplot(total_accel_belt, total_accel_arm, col=classe, data=pml_train_sample)
+plotrf + geom_point(aes(x=total_accel_belt, y=total_accel_arm, col=classe),size=4,shape=4,data=pml_centers)
+```
+
+Now all the previous steps have been done, the required predictions with the selected model can be done. The last column was deleted because it wasn't useful and it could make misfunction the model.
+
+Once the classes have been predicted, these have been added to the test set used, to watch the final test set.
+A graphical representation has been added with the new predictions and two of the variables used to fit the model.
+
+```{r}
+#Predicting new values
+preds<-predict(RF_caret, pml_test_models)
+preds<-as.vector(preds)
+pml_test_models<-pml_test_models[,-53]
+pml_test_models$classe<-preds
+
+#Plotting the predictions
+qplot(total_accel_belt, total_accel_arm, col=classe, data=pml_test_models, main="New predictions on test data")
+```
+
