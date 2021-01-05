@@ -15,8 +15,8 @@ Some professional packages were tried but finally an easier solution was perform
 ```{r}
 pml_training<-read.csv("C:/Users/U6049382/OneDrive/Coursera/8. Practical Machine Learning/pml-training.csv")
 pml_testing<-read.csv("C:/Users/U6049382/OneDrive/Coursera/8. Practical Machine Learning/pml-testing.csv")
-pml_training<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-training.csv")
-pml_testing<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-testing.csv")
+#pml_training<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-training.csv")
+#pml_testing<-read.csv("C:\Users\HP\OneDrive\Coursera\8. Practical Machine Learning/pml-testing.csv")
 
 pml_training<-pml_training[,-c(12:36)]
 pml_training<-pml_training[,-c(25:34)]
@@ -50,7 +50,7 @@ library(ElemStatLearn)
 library(tidyverse)
 ```
 
-Now this is the code used to fit a model. The algorith used has been Random Forest, due to the unclear structure of the data, and because these kind of models are suggested for its usage with human data modelling, due to its complexity.
+Now this is the code used to fit a model. The algorithm used has been Random Forest, due to the unclear structure of the data, and because these kind of models are suggested for its usage with human data modelling, due to its complexity.
 
 A shorter and random resample has been taken from the traning set, so faster calculations can be done. With the number of observations, the random forest function was taking a lot of time even without any kind of cross-validation method, so it made it almost impossible to execute.
 
